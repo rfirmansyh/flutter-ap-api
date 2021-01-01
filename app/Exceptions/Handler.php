@@ -2,19 +2,17 @@
 
 namespace App\Exceptions;
 
-use App\Traits\ApiResponser;
 use Exception;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
-use Symfony\Component\HttpKernel\Exception\HttpException;
-use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Database\QueryException;
+use Illuminate\Auth\AuthenticationException;
 
 class Handler extends ExceptionHandler
 {
-    use ApiResponser;
     /**
      * A list of the exception types that are not reported.
      *
@@ -58,34 +56,71 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Exception $exception)
     {
-        if ($request->is('api/*')) {
-            $response = $this->handleException($request, $exception);
-            return $response;
+        
+        // baca konfigurasi apakah aplikasi menggunakan mode production atau development
+        $debug = config('app.debug');
+        $message = '';
+        $status_code = 500;
+        // cek jika eksepsinya dikarenakan model tidak ditemukan
+        if ($exception instanceof ModelNotFoundException) {
+            $message = 'Resource is not found';
+            $status_code = 404;
         }
-        return parent::render($request, $exception);
+        // cek jika eksepsinya dikarenakan resource tidak ditemukan
+        elseif ($exception instanceof NotFoundHttpException) {
+            $message = 'Endpoint is not found';
+            $status_code = 404;
+        }
+        // cek jika eksepsinya dikarenakan method tidak diizinkan
+        elseif ($exception instanceof MethodNotAllowedHttpException) {
+            $message = 'Method is not allowed';
+            $status_code = 405;
+        }
+        // cek jika eksepsinya dikarenakan kegagalan validasi
+        else if ($exception instanceof ValidationException) {
+            $validationErrors = $exception->validator->errors()->getMessages();
+            $validationErrors = array_map(function($error) {
+                return array_map(function($message) {
+                    return $message;
+                }, $error);
+            }, $validationErrors);
+            $message = $validationErrors;
+            $status_code = 405;
+        }
+        // cek jika eksepsinya dikarenakan kegagalan query
+        else if ($exception instanceof QueryException) {
+            if ($debug) {
+                $message = $exception->getMessage();
+            } else {
+                $message = 'Query failed to execute';
+            }
+            $status_code = 500;
+        }
+        $rendered = parent::render($request, $exception);
+        $status_code = $rendered->getStatusCode();
+        if ( empty($message) ) {
+            $message = $exception->getMessage();
+        }
+        $errors = [];
+        if ($debug) {
+            $errors['exception'] = get_class($exception);
+            $errors['trace'] = explode("\n", $exception->getTraceAsString());
+        }
+        return response()->json([
+            'status' => $status_code,
+            'message' => $message,
+            'data' => null,
+            'errors' => $errors,
+        ], $status_code);
         
     }
 
-    public function handleException($request, Exception $exception)
+    protected function unauthenticated($request, AuthenticationException $exception)
     {
-
-        if ($exception instanceof MethodNotAllowedHttpException) {
-            return $this->errorResponse('The specified method for the request is invalid', 405);
-        }
-
-        if ($exception instanceof NotFoundHttpException) {
-            return $this->errorResponse('The specified URL cannot be found', 404);
-        }
-
-        if ($exception instanceof HttpException) {
-            return $this->errorResponse($exception->getMessage(), $exception->getStatusCode());
-        }
-
-        // if (config('app.debug')) {
-        //     return parent::render($request, $exception);            
-        // }
-
-        return $this->errorResponse('Unexpected Exception. Try later', 500);
-
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Unauthenticate',
+            'data' => null
+        ], 401);
     }
 }

@@ -36,4 +36,20 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function generateToken()
+    {
+        $this->api_token = str_random();
+        $this->save();
+        return $this->api_token;
+    }
+
+    // RELATION
+    public function role() { return $this->belongsTo('App\Role'); }
+    public function kabupaten() { return $this->belongsTo('App\Kabupaten'); }
+    public function posts() { return $this->hasMany('App\Post'); }
+    public function reviews() { return $this->hasMany('App\Review'); }
+    public function tempats() { return $this->hasMany('App\Tempat'); }
+
+
 }
