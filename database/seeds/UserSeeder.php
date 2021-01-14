@@ -16,15 +16,15 @@ class UserSeeder extends Seeder
             'name' => 'Rahmad Firmansyah',
             'email' => 'fsyah7052@gmail.com',
             'password' => bcrypt('123123'),
-            'role_id' => 1,
-            'kabupaten_id' => 3509
+            'created_at' => now(),
+            'updated_at' => null
         ];
         $users[] = [
             'name' => 'Bambang Gentolet',
             'email' => 'bambang@gmail.com',
             'password' => bcrypt('123123'),
-            'role_id' => 2,
-            'kabupaten' => 3509
+            'created_at' => now(),
+            'updated_at' => null
         ];
 
         DB::table('users')->insert($users);

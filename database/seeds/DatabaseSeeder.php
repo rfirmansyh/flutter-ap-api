@@ -11,10 +11,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        $this->call("RoleSeeder");
         $this->call("UserSeeder");
-        $this->call("PostSeeder");
-        $this->call("TempatSeeder");
-        $this->call("ReviewSeeder");
+        $this->call("GoodSeeder");
+        $this->call("DonationtypeSeeder");
     }
 }

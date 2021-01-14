@@ -11,7 +11,7 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
-        $this->validate($request, [
+        $validator = Validator::make($request->all(), [
             'email' => 'required',
             'password' => 'required',
         ]);
@@ -20,7 +20,7 @@ class AuthController extends Controller
         $message = '';
         $data = null;
         $code = 401;
-        if ($user) {
+        if ($user && !$validator->fails()) {
             if (Hash::check($request->password, $user->password)) {
                 $user->generateToken();
                 $status = 'success';
@@ -42,7 +42,7 @@ class AuthController extends Controller
     }
 
     public function register(Request $request)
-    {   
+    {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255', // name harus diisi teks dengan panjang maksimal 255
             'email' => 'required|string|email|max:255|unique:users', // email harus unik pada tabel users
@@ -91,6 +91,6 @@ class AuthController extends Controller
             'status' => 'success',
             'message' => 'logout berhasil',
             'data' => []
-        ], 200); 
+        ], 200);
     }
 }
