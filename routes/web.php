@@ -25,11 +25,11 @@
 Route::get('/test', function() {
     // $posts = new PostResource(\App\User::all());
     // return $posts;
-    $keyword = 'ACEH';
-    $tempats = \App\Tempat::select(\DB::raw('tempats.*, COUNT(*) AS c'))
-                        ->leftJoin('reviews', 'tempats.id', '=', 'reviews.tempat_id')
-                        ->orderBy('created_at', 'desc')
-                        ->groupBy('tempats.id')
-                        ->paginate(4);
+    // $keyword = 'ACEH';
+    // $tempats = \App\Tempat::select(\DB::raw('tempats.*, COUNT(*) AS c'))
+    //                     ->leftJoin('reviews', 'tempats.id', '=', 'reviews.tempat_id')
+    //                     ->orderBy('created_at', 'desc')
+    //                     ->groupBy('tempats.id')
+    //                     ->paginate(4);
     return 'adfksadfj';
 });
