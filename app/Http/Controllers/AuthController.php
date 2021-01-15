@@ -61,9 +61,11 @@ class AuthController extends Controller
                 'name'  => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
+                'role_id' => 2,
+                'kabupaten_id' => 3509,
             ]);
             if ($user) {
-                $user->generateToken();
+                // $user->generateToken();
                 $status = 'success';
                 $message = 'register successfully';
                 $data = $user->toArray();

@@ -40,6 +40,7 @@ Route::group(['prefix' => 'v1'], function() {
 
     Route::post('tempats/upload', 'TempatController@upload');
     Route::get('tempats/search/{keyword}', 'TempatController@search');
+    Route::get('tempats/ratebyplace/{place_id}', 'TempatController@rate');
     Route::apiResource('tempats', 'TempatController');
     
     Route::get('provinces/search/{keyword}', 'ProvinceController@search');
@@ -48,12 +49,11 @@ Route::group(['prefix' => 'v1'], function() {
     Route::get('kabupatens/getbyprovinceid/{id}', 'KabupatenController@getByProvinceId');
     Route::get('kabupatens/search/{keyword}', 'KabupatenController@search');
     Route::apiResource('kabupatens', 'KabupatenController');
+
+    Route::apiResource('reviews', 'ReviewController');
     
     Route::group(['middleware' => 'auth:api'], function() {
         Route::post('logout', 'AuthController@logout');
-        Route::apiResources([
-            'posts' => 'PostController'
-        ]);
     });
 
 });

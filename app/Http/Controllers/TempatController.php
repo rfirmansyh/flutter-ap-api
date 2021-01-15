@@ -26,7 +26,7 @@ class TempatController extends Controller
                         })
                         ->join('kabupatens', 'kabupatens.id', '=', 'tempats.kabupaten_id')
                         ->join('provinces', 'provinces.id', '=', 'tempats.province_id')
-                        ->orderBy('created_at')
+                        ->orderBy('created_at', 'desc')
                         ->groupBy('tempats.id')
                         ->paginate(4);
         $tempats = new TempatCollectionResource($tempats);
@@ -48,7 +48,7 @@ class TempatController extends Controller
                     ->join('provinces', 'provinces.id', '=', 'tempats.province_id')
                     ->groupBy('tempats.id')
                     ->where('tempats.id', $id)
-                    ->orderBy('created_at')
+                    ->orderBy('created_at','desc')
                     ->get();
         $tempat = new TempatCollectionResource($tempat);
         return $tempat;
@@ -65,6 +65,39 @@ class TempatController extends Controller
                         ->orderBy('tempats.created_at')
                         ->get();
         return new TempatCollectionResource($tempats);
+    }
+
+    public function rate($place_id)
+    {
+        $total_rating_in_that_place = Tempat::where('kabupaten_id', $place_id)->count();
+        $average_rating_in_that_place = Tempat::select(\DB::raw("COALESCE(ROUND(SUM(rating_sanitasi)/$total_rating_in_that_place, 2), 0) as sum_rating"))
+                                                ->where('kabupaten_id', $place_id)
+                                                ->first();
+        $review_sum = \App\Review::select(\DB::raw('reviews.*, SUM(reviews.rating) / COUNT(reviews.tempat_id) as review_total'));
+        $average_review_in_that_place = Tempat::select(\DB::raw('COALESCE(ROUND(review_total, 2),0) as sum_review'))
+                                        ->leftJoinSub($review_sum, 'reviews', function($join) {
+                                            $join->on('tempats.id', '=', 'reviews.tempat_id');
+                                        })
+                                        ->where('kabupaten_id', $place_id)
+                                        ->first();
+        $average_rating_in_that_place = $average_rating_in_that_place !== null ? $average_rating_in_that_place->sum_rating : 0;
+        $average_review_in_that_place = $average_review_in_that_place !== null ? $average_review_in_that_place->sum_review : 0;
+        $kabupaten = \App\Kabupaten::where('id', $place_id)->first();
+        $data = [
+            'id' => $kabupaten->id,
+            'name' => $kabupaten->name,
+            'average_rating' => $average_rating_in_that_place,
+            'average_review' => $average_review_in_that_place
+        ];
+
+        return response()->json([
+            'code' => 200,
+            'status' => 'success',
+            'message' => 'Data Rata-rata Rating Berhasil Ditemukan',
+            'data' => $data
+        ], 200);
+
+        // dd($average_review_in_that_place);
     }
 
     /**

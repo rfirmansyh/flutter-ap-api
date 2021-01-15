@@ -92,7 +92,7 @@ class Handler extends ExceptionHandler
             if ($debug) {
                 $message = $exception->getMessage();
             } else {
-                $message = 'Query failed to execute';
+                $message = $exception->getMessage();
             }
             $status_code = 500;
         }
